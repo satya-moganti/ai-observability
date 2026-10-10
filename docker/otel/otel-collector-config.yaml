@@ -1,0 +1,50 @@
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+  processors:
+    memory_limiter:
+      check_interval: 5s
+      limit_mib: 256
+    batch:
+      timeout: 5s
+      send_batch_size: 1024
+
+  exporters:
+    debug:
+      verbosity: normal
+
+    otlp:
+      endpoint: tempo:4317
+      tls:
+        insecure: true
+
+    prometheus:
+      endpoint: 0.0.0.0:8889
+
+    otlphttp/loki:
+      # Use this only if your Loki instance has an OTLP endpoint
+      # enabled and compatible with this exporter.
+      endpoint: http://loki:3100/otlp
+
+  service:
+    pipelines:
+      traces:
+        receivers: [otlp]
+        processors: [memory_limiter, batch]
+        exporters: [otlp, debug]
+
+      metrics:
+        receivers: [otlp]
+        processors: [memory_limiter, batch]
+        exporters: [prometheus, debug]
+
+      logs:
+        receivers: [otlp]
+        processors: [memory_limiter, batch]
+        exporters: [otlphttp/loki, debug]
+

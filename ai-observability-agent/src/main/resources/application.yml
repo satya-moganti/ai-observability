@@ -1,0 +1,58 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: ai-observability-agent
+
+  # Use Spring AI's AI-compatible ChatModel.
+  # OLLAMA  LLM that can be useful for practice.
+  ai:
+    model:
+      chat: ollama
+
+    ollama:
+      base-url: http://host.docker.internal:11434
+
+      chat:
+        model: qwen2.5:7b
+        options:
+          temperature: 0.2
+  # In Case if you have OPEN_API_KEY OR HUGGINGFACE_API_KEY , You can store in Kubernetes secrets and can enable following configs          
+  #ai:
+  #  model:
+  #    chat: openai
+
+  #  openai:
+  #    api-key: ${HUGGINGFACE_API_KEY}
+  #    base-url: https://router.huggingface.co/v1
+
+#      chat:
+#        model: openai/gpt-oss-20b:groq
+#        temperature: 0.2
+#        max-tokens: 1000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+agent:
+  prometheus:
+    url: ${PROMETHEUS_URL:http://prometheus:9090}
+
+  loki:
+    url: ${LOKI_URL:http://loki:3100}
+
+  tempo:
+    url: ${TEMPO_URL:http://tempo:3200}
+
+logging:
+    level:
+      org.springframework.ai: DEBUG

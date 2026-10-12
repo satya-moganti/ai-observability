@@ -118,6 +118,95 @@ docker-compose down -v
 - H2 Console: http://localhost:8080/h2-console
 
 ---
+### Querying Loki, Tempo, Prometheus Using ai-observability-agent 
+
+#### QUERY LOKI
+```powershell
+$Body = @{
+    question = "Query Loki only. Retrieve the last 15 minutes of logs for book-management-app. Show the actual Loki query, matching log entries, timestamps, and any errors. Do not invent results."
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+    -Uri "http://localhost:8085/api/agent/diagnose" `
+    -Method Post `
+    -ContentType "application/json" `
+    -Body $Body
+
+
+```
+
+#### RESPONSE 
+
+![LOKI RESPONSE](./docs/loki_response.png)
+
+
+
+#### QUERY TEMPO
+
+```powershell
+$Body = @{
+    question = "Query Tempo only. Search for traces from book-management-app during the last 15 minutes. Return trace IDs, service names, durations, and any errors available from Tempo. Do not invent results."
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+    -Uri "http://localhost:8085/api/agent/diagnose" `
+    -Method Post `
+    -ContentType "application/json" `
+    -Body $Body
+```
+
+#### RESPONSE
+
+![TEMPO RESPONSE](./docs/tempo_response.png)
+
+#### QUERY PROMETHEUS
+
+Request 1: 
+
+```poweshell
+$Body = @{
+    question = "Query Prometheus only. Execute the instant PromQL query up{job=`"book-management-app`"}. Return the exact Prometheus response, including status, metric labels, timestamp, and value. Do not query Tempo or Loki. Do not invent results."
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+    -Uri "http://localhost:8085/api/agent/diagnose" `
+    -Method Post `
+    -ContentType "application/json" `
+    -Body $Body
+```
+#### RESPONSE
+![PROMETHEUS RESPONSE](./docs/prometheus_up.png)
+
+
+Request 2:
+```poweshell
+$Body = @{
+    question = @"
+Query Prometheus only.
+
+Call the Prometheus RANGE query tool with these exact arguments:
+- query: rate(http_server_requests_seconds_count{job="book-management-app"}[5m])
+- minutesBack: 15
+- step: 1m
+
+Return the actual timestamped samples returned by the tool.
+Do not substitute an instant query.
+Do not query JVM metrics, Tempo, or Loki.
+If the range tool is unavailable or fails, report that explicitly.
+Do not invent results.
+"@
+} | ConvertTo-Json -Depth 5
+
+Invoke-RestMethod `
+    -Uri "http://localhost:8085/api/agent/diagnose" `
+    -Method Post `
+    -ContentType "application/json" `
+    -Body $Body
+```
+
+#### RESPONSE
+![PROMETHEUS RESPONSE](./docs/prometheus_response.png)
+
 ### Important Notes
 
 - **Java and Spring Boot:** Spring Boot 3 requires Java 17 or later. Use the Spring Boot version configured in your project's `pom.xml`.

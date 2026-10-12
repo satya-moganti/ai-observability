@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
-
+import com.bookstore.aiagent.constants.AgentConstants;
 import java.net.URI;
 import java.time.Instant;
 
@@ -41,37 +41,7 @@ public class LokiTools {
      *
      * Java calculates the Loki timestamps.
      */
-    @Tool(description = """
-            Query Grafana Loki logs using LogQL.
-
-            IMPORTANT:
-            The logql parameter MUST be a valid LogQL query.
-            Never pass natural language such as:
-            "book-management-app error"
-
-            Valid example:
-            {instance=~"default/book-management-app-.*:book-management-app"} |= "ERROR"
-
-            The minutes parameter specifies how far back to search.
-
-            Example:
-            logql =
-            {instance=~"default/book-management-app-.*:book-management-app"} |= "ERROR"
-
-            minutes = 15
-
-            Use this tool when investigating:
-            - application errors
-            - exceptions
-            - warnings
-            - stack traces
-            - Kubernetes application failures
-            - pod failures
-
-            The application calculates the Loki start and end timestamps.
-            Do not provide "now" as a timestamp.
-            Return the actual logs returned by Loki.
-            """)
+    @Tool(description = AgentConstants.LOKI_DESCRIPTION )
     public String queryLogs(String logql, int minutes) {
 
         logger.info("========== LOKI TOOL ==========");
